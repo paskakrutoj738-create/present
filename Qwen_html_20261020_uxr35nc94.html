@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Решето Эратосфена</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin: 40px 0 20px;
+            color: #222;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .steps {
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .step {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .step:before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 8px;
+            margin: 30px 0;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .cell.prime {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .cell.composite {
+            background: #f5f5f5;
+            color: #bbb;
+            border-color: #e0e0e0;
+            text-decoration: line-through;
+        }
+
+        .cell.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-fullscreen {
+            width: 100%;
+            padding: 20px;
+            font-size: 18px;
+            margin-bottom: 30px;
+            background: #667eea;
+        }
+
+        .btn-fullscreen:hover {
+            background: #5568d3;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            min-height: 50px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .cell {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Кнопка полный экран -->
+        <button class="btn-fullscreen" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ На весь экран</button>
+
+        <!-- Теория -->
+        <div class="section">
+            <h1>Решето Эратосфена</h1>
+            <p>Алгоритм нахождения всех простых чисел до заданного числа N.</p>
+            
+            <h2>Как это работает</h2>
+            <div class="steps">
+                <div class="step" data-step="1.">Записываем все числа от 2 до N</div>
+                <div class="step" data-step="2.">Берём первое незачёркнутое число — оно простое</div>
+                <div class="step" data-step="3.">Вычёркиваем все числа, кратные этому числу</div>
+                <div class="step" data-step="4.">Повторяем шаги 2–3, пока не переберём все числа</div>
+                <div class="step" data-step="5.">Оставшиеся незачёркнутые числа — простые</div>
+            </div>
+        </div>
+
+        <!-- Интерактив -->
+        <div class="section">
+            <h2>Интерактивная демонстрация</h2>
+            <p>Числа от 2 до 30:</p>
+            
+            <div class="grid" id="grid"></div>
+            
+            <div class="controls">
+                <button onclick="start()" id="startBtn">Начать</button>
+                <button onclick="nextStep()" id="nextBtn" disabled>Следующий шаг</button>
+                <button onclick="reset()" id="resetBtn">Сбросить</button>
+            </div>
+            
+            <div class="info" id="info">Нажмите «Начать» для запуска алгоритма</div>
+        </div>
+    </div>
+
+    <script>
+        const maxNum = 30;
+        let numbers = [];
+        let currentPrime = 2;
+        let step = 0;
+        let isRunning = false;
+
+        function init() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            for (let i = 2; i <= maxNum; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = i;
+                cell.id = `cell-${i}`;
+                grid.appendChild(cell);
+            }
+            
+            numbers = Array(maxNum + 1).fill(true);
+            numbers[0] = numbers[1] = false;
+        }
+
+        function start() {
+            reset();
+            isRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            nextStep();
+        }
+
+        function nextStep() {
+            if (!isRunning) return;
+            
+            const info = document.getElementById('info');
+            
+            // Находим следующее простое число
+            while (currentPrime <= maxNum && !numbers[currentPrime]) {
+                currentPrime++;
+            }
+            
+            if (currentPrime * currentPrime > maxNum) {
+                // Отмечаем оставшиеся простые числа
+                for (let i = currentPrime; i <= maxNum; i++) {
+                    if (numbers[i]) {
+                        highlightCell(i, 'prime');
+                    }
+                }
+                info.textContent = 'Готово! Зелёные числа — простые.';
+                document.getElementById('nextBtn').disabled = true;
+                isRunning = false;
+                return;
+            }
+            
+            // Подсвечиваем текущее простое число
+            highlightCell(currentPrime, 'active');
+            info.textContent = `Простое число: ${currentPrime}. Вычёркиваем кратные...`;
+            
+            setTimeout(() => {
+                // Вычёркиваем кратные
+                for (let j = currentPrime * currentPrime; j <= maxNum; j += currentPrime) {
+                    if (numbers[j]) {
+                        numbers[j] = false;
+                        highlightCell(j, 'composite');
+                    }
+                }
+                
+                highlightCell(currentPrime, 'prime');
+                info.textContent = `Вычеркнули все числа, кратные ${currentPrime}`;
+                
+                currentPrime++;
+            }, 500);
+        }
+
+        function highlightCell(num, className) {
+            const cell = document.getElementById(`cell-${num}`);
+            if (cell) {
+                cell.className = `cell ${className}`;
+            }
+        }
+
+        function reset() {
+            isRunning = false;
+            currentPrime = 2;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('info').textContent = 'Нажмите «Начать» для запуска алгоритма';
+            init();
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    // Скрываем кнопку после перехода в полный экран
+                    document.getElementById('fullscreenBtn').style.display = 'none';
+                }).catch(err => {
+                    console.log(`Ошибка при переходе в полный экран: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Инициализация при загрузке
+        init();
+    </script>
+</body>
+</html>
