@@ -43,6 +43,14 @@
             color: #555;
         }
 
+        .author {
+            text-align: right;
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
         .section {
             margin-bottom: 50px;
         }
@@ -157,6 +165,21 @@
             color: #666;
         }
 
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .footer h3 {
+            color: #667eea;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 600px) {
             .grid {
                 grid-template-columns: repeat(6, 1fr);
@@ -172,6 +195,9 @@
     <div class="container">
         <!-- Кнопка полный экран -->
         <button class="btn-fullscreen" id="fullscreenBtn" onclick="toggleFullscreen()">⛶ На весь экран</button>
+
+        <!-- Автор -->
+        <div class="author">Автор: Павел Соловей, 6Г</div>
 
         <!-- Теория -->
         <div class="section">
@@ -202,6 +228,11 @@
             </div>
             
             <div class="info" id="info">Нажмите «Начать» для запуска алгоритма</div>
+        </div>
+
+        <!-- Подвал -->
+        <div class="footer">
+            <h3>Спасибо за внимание!</h3>
         </div>
     </div>
 
